@@ -27,5 +27,3 @@ REVOKE SELECT ON Employees FROM User1, User2;
 
 -- This removes all privileges on the Employees table from User1.
 REVOKE ALL PRIVILEGES ON Employees FROM User1;
-
-
