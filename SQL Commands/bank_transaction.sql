@@ -64,4 +64,40 @@ DELIMITER ;
 
 CALL TransferFunds(1, 2, 900.00);
 
+-- Implement logging for errors in a table
+CREATE TABLE error_logs (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    error_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    sqlstate_code VARCHAR(5),
+    error_message TEXT,
+    procedure_name VARCHAR(50)
+);
 
+DELIMITER //
+CREATE PROCEDURE transferFunds(
+IN fromAccount INT,
+IN toAccount INT,
+IN amount DECIMAL(10,2)
+)
+BEGIN
+DECLARE fromBalance DECIMAL(10,2);
+DECLARE message VARCHAR (50);
+START TRANSACTION;
+SELECT balance INTO fromBalance FROM accounts WHERE id = fromAccount;
+IF fromBalance < amount THEN
+SET message = 'Insufficient Fund..!!';
+INSERT INTO `error_logs` (`sqlstate_code`, `error_message`, `procedure_name`)
+VALUES ('45000', 'Insufficient Funds.', 'transferFunds');
+SIGNAL SQLSTATE '45000'
+SET MESSAGE_TEXT = 'Insufficient Funds!';
+ELSE
+UPDATE accounts SET balance = balance - amount WHERE id = fromAccount;
+UPDATE accounts SET balance = balance + amount WHERE id = toAccount;
+SET message = 'Transaction Completed..!!';
+END IF;
+COMMIT;
+SELECT message;
+END //
+DELIMITER ;
+
+CALL transferFunds(1, 2, 200.00);
